@@ -1,20 +1,19 @@
 #include <iostream>
-//#include "std_lib_facilities.h"
 #include "Eigen/Dense"
 
-//using namespace std;
-using Eigen::MatrixXd;
+//using Eigen::MatrixXd;
+//using namespace Eigen;
 
 int main () {
      std::cout <<  "Starting program..." << std::endl;
 
-     MatrixXd m(10,5);
-     m = MatrixXd::Random(10,5);
+     Eigen::MatrixXd m(10,5);
+     m = Eigen::MatrixXd::Random(10,5);
 
-     MatrixXd m2(5,10);
-     m2 = MatrixXd::Random(5,10);
+     Eigen::MatrixXd m2(5,10);
+     m2 = Eigen::MatrixXd::Random(5,10);
 
-     MatrixXd m3(10,10);
+     Eigen::MatrixXd m3(10,10);
 
      m3 = m * m2;
 
