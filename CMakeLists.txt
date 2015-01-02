@@ -1,11 +1,17 @@
 cmake_minimum_required(VERSION 2.8.4)
 project(mnist_cpp)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -Wall")
+
+include_directories(
+    include
+    src
+    )
 
 set(SOURCE_FILES
-    LICENSE
-    main.cpp
-    README.md)
+    src/main.cpp
+    include/std_lib_facilities.h
+    include/Eigen/
+    )
 
 add_executable(mnist_cpp ${SOURCE_FILES})
