@@ -6,7 +6,7 @@
 using Eigen::MatrixXd;
 
 int main () {
-     std::cout <<  "Starting program..." << endl;
+     std::cout <<  "Starting program..." << std::endl;
 
      MatrixXd m(10,5);
      m = MatrixXd::Random(10,5);
@@ -18,7 +18,7 @@ int main () {
 
      m3 = m * m2;
 
-     cout << m3;
+     std::cout << m3;
 
 
      return 0;
