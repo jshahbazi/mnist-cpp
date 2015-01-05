@@ -1,24 +1,23 @@
 #include <iostream>
-#include "Eigen/Dense"
+//#include "Eigen/Dense"
 #include <armadillo>
 
 //using Eigen::MatrixXd;
 //using namespace Eigen;
+using namespace arma;
+
 
 int main () {
      std::cout <<  "Starting program..." << std::endl;
 
-     Eigen::MatrixXd m(10,5);
-     m = Eigen::MatrixXd::Random(10,5);
+     mat m1 = randu<mat>(40000,500);
+     mat m2 = randu<mat>(500,2000);
+     mat m3(40000,2000);
+     mat m4(40000,2000);
 
-     Eigen::MatrixXd m2(5,10);
-     m2 = Eigen::MatrixXd::Random(5,10);
+     m3=m1*m2;
 
-     Eigen::MatrixXd m3(10,10);
-
-     m3 = m * m2;
-
-     std::cout << m3;
+     std::cout << m3.row(0) << std::endl;
 
 
      return 0;
