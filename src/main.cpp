@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Eigen/Dense"
+#include <armadillo>
 
 //using Eigen::MatrixXd;
 //using namespace Eigen;
