@@ -1,11 +1,7 @@
 #include <iostream>
-//#include "Eigen/Dense"
 #include <armadillo>
 
-//using Eigen::MatrixXd;
-//using namespace Eigen;
 using namespace arma;
-
 
 int main () {
      std::cout <<  "Starting program..." << std::endl;

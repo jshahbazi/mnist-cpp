@@ -12,8 +12,6 @@ include_directories(
 set(SOURCE_FILES
     src/main.cpp
     include/armadillo.h
-    include/std_lib_facilities.h
-    include/Eigen/
     include/armadillo_bits
     )
 
