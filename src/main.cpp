@@ -46,3 +46,60 @@ int main () {
 
      return 0;
 }
+
+
+
+
+//    subroutine predict(Theta1, Theta2, inputdata, predictions)
+//         real, allocatable, intent(in) :: Theta1(:,:), Theta2(:,:), inputdata(:,:)
+//         real, allocatable, intent(inout) :: predictions(:,:)
+//         real, allocatable :: h1(:,:), h1_ones(:,:), h2(:,:), pre_h1(:,:), pre_h2(:,:), ones(:,:), X(:,:)
+
+//         integer :: m
+//         integer :: a1,a2,b1,b2
+    
+//         m = size(inputdata,1)
+    
+//         allocate(h1(size(inputdata,1),size(Theta1,1)))
+//         allocate(h1_ones(size(inputdata,1),size(Theta1,1)+1))
+//         allocate(h2(size(inputdata,1),size(Theta2,1)))
+//         allocate(pre_h1(size(inputdata,1),size(Theta1,1)))
+//         allocate(pre_h2(size(inputdata,1),size(Theta2,1)))
+//         allocate(ones(m,1))
+//         allocate(X(size(inputdata,1),(size(inputdata,2)+1)))      
+    
+//         ones = 1.0
+
+//         X(:,1:1) = ones
+//         X(:,2:) = inputdata    
+    
+//         call matrix_multiply(X,0,Theta1,1,pre_h1)
+//         call sigmoid(pre_h1,h1)
+    
+//         h1_ones(:,1:1) = ones
+//         h1_ones(:,2:) = h1
+       
+//         call matrix_multiply(h1_ones,0,Theta2,1,pre_h2)
+//         call sigmoid(pre_h2,h2)
+    
+//         predictions = reshape(maxloc(h2,2), (/ m,1 /))
+    
+//    end subroutine predict
+
+//    subroutine representative_matrix(input_matrix, output_matrix)
+//         real, allocatable, intent(in) :: input_matrix(:,:)
+//         real, allocatable, intent(inout) :: output_matrix(:,:)
+//         integer :: i,j
+    
+//         do i=1,size(input_matrix,1)
+//             temp = input_matrix(i,1)
+//             do j=1,K
+//                 if(temp == j)then
+//                     output_matrix(i,j) = 1
+//                 else
+//                     output_matrix(i,j) = 0
+//                 end if
+//             end do
+//         end do
+    
+//    end subroutine representative_matrix
