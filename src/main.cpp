@@ -11,54 +11,91 @@ constexpr int num_labels = 10;
 constexpr double lambda = 0.1;
 constexpr int max_iterations = 100;
 
+void predict(const mat& Theta1,const mat& Theta2,const mat& inputdata, mat& predictions);
+void sigmoid(const mat& input, mat& output);
+
 int main () {
-     std::cout <<  "Starting program..." << std::endl;
-
-     mat x_train(training_size,input_layer_size);
-     x_train.load("train_x_4000.csv");
-
-     mat y_train(1,training_size);
-     y_train.load("train_y_4000.csv");
-
-     //calculate mean of the training data
-     double x_mean = sum(sum(x_train));
-     x_mean /= x_train.n_elem;  //33.5026  TODO: check this
-
-     //calculate standard devication of the training data
-     mat x_train_mean(training_size,input_layer_size);
-     x_train_mean = x_train;
-     x_train_mean.transform( [x_mean](double val){return (val - x_mean);} );
-     double x_std = sum(sum(x_train_mean));
-     x_std /= (x_train_mean.n_elem);
-     x_std = std::sqrt(x_std);  //7.23942e-06  TODO: check this
-
-
-     mat initial_theta1(input_layer_size,hidden_layer_size,fill::randu);
-     mat initial_theta2(hidden_layer_size,num_labels,fill::randu);
-     
-     initial_theta1.reshape(1,input_layer_size*hidden_layer_size);
-     initial_theta2.reshape(1,hidden_layer_size*num_labels);
-     
-     mat combined_theta = join_rows(initial_theta1,initial_theta2);
-     std::cout << "combined_theta rows: " << combined_theta.n_rows << ", cols: " << combined_theta.n_cols << endl;
-
-
-     //call fmincg function
-
-
-     initial_theta1 = combined_theta.submat(0, 0, 0, initial_theta1.n_cols-1);
-     initial_theta1.reshape(input_layer_size, hidden_layer_size);
-     std::cout << "initial_theta1 rows: " << initial_theta1.n_rows << ", cols: " << initial_theta1.n_cols << endl;
-
-     initial_theta2 = combined_theta.submat(0, initial_theta1.n_cols-1, 0,initial_theta1.n_cols-1+initial_theta2.n_cols-1);
-     initial_theta2.reshape(hidden_layer_size, num_labels);
-     std::cout << "initial_theta2 rows: " << initial_theta2.n_rows << ", cols: " << initial_theta2.n_cols << endl;
-
-
-     return 0;
+    std::cout <<  "Starting program..." << std::endl;
+    
+    mat predictions(training_size,1,fill::zeros);
+    
+    mat x_train(training_size,input_layer_size);
+    x_train.load("train_x_4000.csv");
+    
+    mat y_train(1,training_size);
+    y_train.load("train_y_4000.csv");
+    
+    //calculate mean of the training data
+    double x_mean = sum(sum(x_train));
+    x_mean /= x_train.n_elem;  //33.5026  TODO: check this
+    
+    //calculate standard devication of the training data
+    mat x_train_mean(training_size,input_layer_size);
+    x_train_mean = x_train;
+    x_train_mean.transform( [x_mean](double val){return (val - x_mean);} );
+    double x_std = sum(sum(x_train_mean));
+    x_std /= (x_train_mean.n_elem);
+    x_std = std::sqrt(x_std);  //7.23942e-06  TODO: check this
+    
+    
+    mat initial_theta1(input_layer_size,hidden_layer_size,fill::randu);
+    mat initial_theta2(hidden_layer_size,num_labels,fill::randu);
+    
+    initial_theta1.reshape(1,input_layer_size*hidden_layer_size);
+    initial_theta2.reshape(1,hidden_layer_size*num_labels);
+    
+    mat combined_theta = join_rows(initial_theta1,initial_theta2);
+    std::cout << "combined_theta rows: " << combined_theta.n_rows << ", cols: " << combined_theta.n_cols << endl;
+    
+    
+    //call fmincg function
+    
+    
+    initial_theta1 = combined_theta.submat(0, 0, 0, initial_theta1.n_cols-1);
+    initial_theta1.reshape(input_layer_size, hidden_layer_size);
+    std::cout << "initial_theta1 rows: " << initial_theta1.n_rows << ", cols: " << initial_theta1.n_cols << endl;
+    
+    initial_theta2 = combined_theta.submat(0, initial_theta1.n_cols-1, 0,initial_theta1.n_cols-1+initial_theta2.n_cols-1);
+    initial_theta2.reshape(hidden_layer_size, num_labels);
+    std::cout << "initial_theta2 rows: " << initial_theta2.n_rows << ", cols: " << initial_theta2.n_cols << endl;
+    
+    predict(initial_theta1,initial_theta2,x_train,predictions);
+    
+    std::cout << "predictions: " << predictions.row(0) << endl;
+    
+    return 0;
 }
 
+void predict(const mat& Theta1,const mat& Theta2,const mat& inputdata, mat& predictions){
+    mat x_holder(inputdata.n_rows,inputdata.n_cols+1,fill::ones);
+    mat pre_h1(x_holder.n_rows,Theta1.n_rows);
+    mat h1_ones(x_holder.n_rows,Theta1.n_rows+1,fill::ones);
+    mat h2(x_holder.n_rows,Theta2.n_rows,fill::zeros);
 
+    x_holder.submat(0,1,x_holder.n_rows-1,x_holder.n_cols-1) = inputdata;
+    
+    std::cout << "x_holder: " << x_holder.n_rows << " " << x_holder.n_cols << endl;
+    std::cout << "Theta1: " << Theta1.n_rows << " " << Theta1.n_cols << endl;
+    
+    //theta1 should have 1's in the first column (see fortran code)
+    pre_h1 = x_holder * Theta1;
+    sigmoid(pre_h1,pre_h1);
+    h1_ones.submat(0,1,h1_ones.n_rows-1,h1_ones.n_cols-1) = pre_h1;
+    
+    std::cout << "h1_ones: " << h1_ones.n_rows << " " << h1_ones.n_cols << endl;
+    std::cout << "Theta2: " << Theta2.n_rows << " " << Theta2.n_cols << endl;
+    
+    h2 = h1_ones * Theta2.t();
+    sigmoid(h2,h2);
+    
+    predictions = arma::max(h2,0);
+
+}
+
+void sigmoid(const mat& input, mat& output){
+    output = input;
+    output.transform([](double val){return (1.0/(1.0 + val));});
+}
 //    subroutine predict(Theta1, Theta2, inputdata, predictions)
 //         real, allocatable, intent(in) :: Theta1(:,:), Theta2(:,:), inputdata(:,:)
 //         real, allocatable, intent(inout) :: predictions(:,:)
@@ -95,6 +132,8 @@ int main () {
     
 //    end subroutine predict
 
+
+
 //    subroutine representative_matrix(input_matrix, output_matrix)
 //         real, allocatable, intent(in) :: input_matrix(:,:)
 //         real, allocatable, intent(inout) :: output_matrix(:,:)
@@ -112,3 +151,194 @@ int main () {
 //         end do
     
 //    end subroutine representative_matrix
+
+
+    // !subroutine sigmoid(input, output)
+    // !    real, allocatable :: input(:,:), output(:,:)
+    // !
+    // !    output = 1.0 / (1.0 + exp(-input))
+    // !end subroutine sigmoid
+
+
+
+    // subroutine sigmoidgradient(input, output)
+    //     real, allocatable :: input(:,:), output(:,:)
+
+    //     output = 1.0 / (1.0 + exp(-input))
+    //     output = output * (1.0 - output)   
+    // end subroutine sigmoidgradient  
+    
+    
+    
+    
+//         real function costandgradient(gradient, nn_params,input_layer_size,hidden_layer_size,num_labels, inputdata, y, lambda)
+
+//         real, allocatable :: inputdata(:,:), X(:,:), y(:,:), y_representative(:,:), gradient(:,:), ones(:,:)
+//         real, allocatable :: a_1(:,:),z_2(:,:),a_2(:,:),z_3(:,:),a_3(:,:),hofx(:,:)
+//         real, allocatable :: delta_2(:,:), temp_delta_2(:,:), delta_3(:,:), gradient_1(:,:), gradient_2(:,:)
+//         real, allocatable :: Theta1_grad(:,:), Theta2_grad(:,:)
+//         integer :: input_layer_size,hidden_layer_size,num_labels,m,l,K,i
+//         integer :: a1,a2,b1,b2,c1,c2
+//         real :: lambda, temp, J
+//         real, allocatable :: nn_params(:,:), Theta1(:,:), Theta2(:,:), temptheta1(:,:),temptheta2(:,:)
+//         real, allocatable :: a_2_ones(:,:), summation(:,:), summation2(:,:), summation3(:,:),z_2_ones(:,:), sigmoid_z_2(:,:)
+    
+//         real :: timer1, timer2, holder1, holder2
+//         double precision :: average1 = 0.0
+//         double precision :: average2 = 0.0
+//         double precision :: average3 = 0.0
+//         double precision :: counter = 0.0
+    
+        
+        
+//         m = size(inputdata,1)
+//         l = size(y,1)
+//         K = num_labels
+
+//         allocate(Theta1(1:hidden_layer_size,1:(input_layer_size+1)))
+//         allocate(Theta2(1:num_labels,1:(hidden_layer_size+1)))
+//         allocate(ones(m,1))
+//         allocate(X(size(inputdata,1),(size(inputdata,2)+1)))        
+//         allocate(y_representative(l,num_labels))        
+//         allocate(z_2(m,hidden_layer_size))
+//         allocate(a_1(size(X,1),size(X,2)))
+//         allocate(a_2(size(z_2,1),size(z_2,2)))              
+//         allocate(a_2_ones(size(a_2,1),(size(a_2,2)+1)))      
+//         allocate(z_3(size(a_2_ones,1),size(Theta2,1)))  !a_2 * Theta2'      
+//         allocate(temptheta2(size(Theta2,2),size(Theta2,1)))        
+//         allocate(a_3(size(z_3,1),size(z_3,2)))        
+//         allocate(summation(size(z_3,1),size(z_3,2)))
+//         allocate(summation2(size(z_3,1),size(z_3,2)))
+//         allocate(summation3(size(z_3,1),size(z_3,2)))
+//         allocate(delta_3(size(a_3,1),size(a_3,2)))        
+//         allocate(z_2_ones(size(z_2,1),(size(z_2,2)+1)))        
+//         allocate(sigmoid_z_2(size(z_2_ones,1),size(z_2_ones,2)))        
+//         allocate(temp_delta_2(size(delta_3,1),size(Theta2,2)))   
+//         allocate(delta_2(size(temp_delta_2,1),size(sigmoid_z_2,2)))
+//         allocate(gradient_2(size(delta_3,2),size(a_2_ones,2)))        
+//         allocate(gradient_1(size(delta_2,2)-1,size(a_1,2)))
+//         allocate(Theta2_grad(1:size(gradient_2),1))
+//         allocate(Theta1_grad(1:size(gradient_1),1))        
+        
+//         allocate(temptheta1(size(Theta1,2),size(Theta1,1)))  
+        
+
+//         Theta1 = reshape(nn_params(1:hidden_layer_size*(input_layer_size + 1),1), (/ hidden_layer_size, (input_layer_size + 1) /))
+//         Theta2 = reshape(nn_params((1+hidden_layer_size*(input_layer_size + 1)):,1), (/ num_labels, (hidden_layer_size + 1) /))
+        
+//         !print *,shape(Theta1)   !500 x 785
+//         !print *,shape(Theta2)   !10  x 501
+        
+        
+//         ones = 1.0
+
+
+
+        
+//         !timer1=secnds(0.0)
+
+
+//         do i=1,m
+//             temp = y(i,1)
+//             do j=1,K
+//                 if(temp == j)then
+//                     y_representative(i,j) = 1
+//                 else
+//                     y_representative(i,j) = 0
+//                 end if
+//             end do
+//         end do
+
+//         X(:,1:1) = ones
+//         X(:,2:) = inputdata        
+//         a_1 = X
+
+//         z_2 = 0.0
+        
+//         call matrix_multiply(a_1,0,Theta1,1,z_2)
+
+
+//         a_2 = 0.0
+//         call sigmoid(z_2,a_2)
+
+        
+//         a_2_ones(:,1:1) = ones
+//         a_2_ones(:,2:) = a_2
+        
+//         z_3 = 0.0
+//         call matrix_multiply(a_2_ones,0,Theta2,1,z_3)
+        
+//         call sigmoid(z_3,a_3)
+
+//         summation = 0.0
+//         summation = -y_representative * log(a_3) - (1 - y_representative) * log(1 - a_3)
+        
+//         J = sum(summation)
+//         J = J / m
+        
+        
+
+        
+//         !do concurrent (i = 1:size(delta_3,1))
+//         !    delta_3(i,:) = a_3(i,:) - y(1,:)
+//         !end do
+        
+//         delta_3 = a_3 - y_representative
+
+//         z_2_ones(:,1:1) = ones
+//         z_2_ones(:,2:) = z_2   
+        
+
+//         sigmoid_z_2 = 0.0
+        
+     
+//         call sigmoidgradient(z_2_ones,sigmoid_z_2)  
+
+
+//         !temp_delta_2 = matmul(delta_3,Theta2)
+
+// !timer1=secnds(0.0)   
+//         !a1 = size(delta_3,1)
+//         !a2 = size(delta_3,2)
+//         !b1 = size(Theta2,1)
+//         !b2 = size(Theta2,2)
+//         !call sGEMM('N','N',a1,b2,b1,1.0,delta_3,a1,Theta2,b1,0.0,temp_delta_2,a1)
+//         call matrix_multiply(delta_3,0,Theta2,0,temp_delta_2)
+// !timer2=secnds(timer1)
+// !average1 = average1 + timer2
+// !counter = counter + 1
+// !print '(a, f8.4)','matrix_multiply timer: ', average1/counter        
+        
+//         delta_2 =0.0
+//         !delta_2 = temp_delta_2 * sigmoid_z_2   !elemental multiplication
+//         call vsMul( size(temp_delta_2), temp_delta_2, sigmoid_z_2, delta_2 )   !elemental multiplication    
+
+        
+//         gradient_2 = 0.0
+//         gradient_1 = 0.0
+        
+//         call matrix_multiply(delta_3,1,a_2_ones,0,gradient_2)
+        
+//         call matrix_multiply(delta_2(:,2:),1,a_1,0,gradient_1)        
+        
+//         gradient_2 = gradient_2 / m
+//         gradient_1 = gradient_1 / m
+        
+//         gradient_2(:,2:) = gradient_2(:,2:) + Theta2(:,2:) * (lambda / m)
+//         gradient_1(:,2:) = gradient_1(:,2:) + Theta1(:,2:) * (lambda / m)
+
+
+//         Theta2_grad = reshape(gradient_2, (/size(gradient_2),1/))
+//         Theta1_grad = reshape(gradient_1, (/size(gradient_1),1/))
+
+//         gradient(1:size(Theta1_grad),1:1) = Theta1_grad
+//         gradient((size(Theta1_grad)+1):,1:1) = Theta2_grad
+        
+//         costandgradient = J
+        
+        
+//         !print '(f8.4, a, f8.4)',average1/counter,' ',average2/counter
+//         !timer2=secnds(timer1)
+//         !average = average*0.9 + timer2*0.1
+//         !print '(a, f8.4)','costandgradient timer: ', timer2
+//     end function costandgradient
