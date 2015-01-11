@@ -1,11 +1,12 @@
 #include <iostream>
-#include <armadillo>
+#include <armadillo.h>
+#include <mkl.h>
 
 using namespace arma;
 
-constexpr int training_size = 4000;
-constexpr int input_layer_size = 784;
-constexpr int hidden_layer_size = 25;
+constexpr int training_size = 4000;    //m
+constexpr int input_layer_size = 784;  //k
+constexpr int hidden_layer_size = 500;  //n
 constexpr int num_labels = 10;
 
 constexpr double lambda = 0.1;
@@ -13,17 +14,20 @@ constexpr int max_iterations = 100;
 
 void predict(const mat& Theta1,const mat& Theta2,const mat& inputdata, mat& predictions);
 void sigmoid(const mat& input, mat& output);
+inline void keep_window_open();
 
 int main () {
-    std::cout <<  "Starting program..." << std::endl;
-    
+	std::cout << "Starting program with " << mkl_get_max_threads() << " threads..." << std::endl;
+
+	//mkl_set_num_threads(4);
+
     mat predictions(training_size,1,fill::zeros);
     
     mat x_train(training_size,input_layer_size);
-    x_train.load("train_x_4000.csv");
+    x_train.load("c:\\train_x_4000.csv");
     
     mat y_train(1,training_size);
-    y_train.load("train_y_4000.csv");
+    y_train.load("c:\\train_y_4000.csv");
     
     //calculate mean of the training data
     double x_mean = sum(sum(x_train));
@@ -38,11 +42,13 @@ int main () {
     x_std = std::sqrt(x_std);  //7.23942e-06  TODO: check this
     
     
-    mat initial_theta1(input_layer_size,hidden_layer_size,fill::randu);
-    mat initial_theta2(hidden_layer_size,num_labels,fill::randu);
-    
-    initial_theta1.reshape(1,input_layer_size*hidden_layer_size);
-    initial_theta2.reshape(1,hidden_layer_size*num_labels);
+	mat initial_theta1(hidden_layer_size, input_layer_size + 1, fill::ones);  //784 26   n k+1
+	initial_theta1.load("c:\\theta1.csv");
+	mat initial_theta2(num_labels, hidden_layer_size + 1, fill::ones);        //25 11     numlabels n+1
+	initial_theta2.load("c:\\theta2.csv");
+
+	initial_theta1.reshape(1, hidden_layer_size*(input_layer_size + 1));
+	initial_theta2.reshape(1, num_labels*(hidden_layer_size + 1));
     
     mat combined_theta = join_rows(initial_theta1,initial_theta2);
     std::cout << "combined_theta rows: " << combined_theta.n_rows << ", cols: " << combined_theta.n_cols << endl;
@@ -52,16 +58,18 @@ int main () {
     
     
     initial_theta1 = combined_theta.submat(0, 0, 0, initial_theta1.n_cols-1);
-    initial_theta1.reshape(input_layer_size, hidden_layer_size);
+	initial_theta1.reshape(hidden_layer_size, input_layer_size + 1);
     std::cout << "initial_theta1 rows: " << initial_theta1.n_rows << ", cols: " << initial_theta1.n_cols << endl;
     
     initial_theta2 = combined_theta.submat(0, initial_theta1.n_cols-1, 0,initial_theta1.n_cols-1+initial_theta2.n_cols-1);
-    initial_theta2.reshape(hidden_layer_size, num_labels);
+	initial_theta2.reshape(num_labels, hidden_layer_size + 1);
     std::cout << "initial_theta2 rows: " << initial_theta2.n_rows << ", cols: " << initial_theta2.n_cols << endl;
     
     predict(initial_theta1,initial_theta2,x_train,predictions);
     
     std::cout << "predictions: " << predictions.row(0) << endl;
+
+	keep_window_open();
     
     return 0;
 }
@@ -72,13 +80,16 @@ void predict(const mat& Theta1,const mat& Theta2,const mat& inputdata, mat& pred
     mat h1_ones(x_holder.n_rows,Theta1.n_rows+1,fill::ones);
     mat h2(x_holder.n_rows,Theta2.n_rows,fill::zeros);
 
+	std::cout << "inputdata: " << inputdata.n_rows << " " << inputdata.n_cols << endl;
+	std::cout << "x_holder: " << x_holder.n_rows << " " << x_holder.n_cols << endl;
     x_holder.submat(0,1,x_holder.n_rows-1,x_holder.n_cols-1) = inputdata;
     
-    std::cout << "x_holder: " << x_holder.n_rows << " " << x_holder.n_cols << endl;
     std::cout << "Theta1: " << Theta1.n_rows << " " << Theta1.n_cols << endl;
     
-    //theta1 should have 1's in the first column (see fortran code)
-    pre_h1 = x_holder * Theta1;
+    pre_h1 = x_holder * Theta1.t();
+
+	std::cout << "pre_h1: " << pre_h1.n_rows << " " << pre_h1.n_cols << endl;
+
     sigmoid(pre_h1,pre_h1);
     h1_ones.submat(0,1,h1_ones.n_rows-1,h1_ones.n_cols-1) = pre_h1;
     
@@ -96,6 +107,17 @@ void sigmoid(const mat& input, mat& output){
     output = input;
     output.transform([](double val){return (1.0/(1.0 + val));});
 }
+
+inline void keep_window_open()
+{
+	std::cin.clear();
+	cout << "Please enter a character to exit\n";
+	char ch;
+	std::cin >> ch;
+	return;
+}
+
+
 //    subroutine predict(Theta1, Theta2, inputdata, predictions)
 //         real, allocatable, intent(in) :: Theta1(:,:), Theta2(:,:), inputdata(:,:)
 //         real, allocatable, intent(inout) :: predictions(:,:)
