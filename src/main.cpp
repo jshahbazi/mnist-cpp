@@ -1,6 +1,6 @@
 #include <iostream>
 #include <armadillo.h>
-#include <mkl.h>
+//#include <mkl.h>
 
 using namespace arma;
 
@@ -12,22 +12,23 @@ constexpr int num_labels = 10;
 constexpr double lambda = 0.1;
 constexpr int max_iterations = 100;
 
-void predict(const mat& Theta1,const mat& Theta2,const mat& inputdata, mat& predictions);
-void sigmoid(const mat& input, mat& output);
+void predict(const mat&,const mat&,const mat&, mat&);
+void sigmoid(const mat&, mat&);
+void sigmoidGradient(const mat&, mat&);
 inline void keep_window_open();
 
 int main () {
-	std::cout << "Starting program with " << mkl_get_max_threads() << " threads..." << std::endl;
+//	std::cout << "Starting program with " << mkl_get_max_threads() << " threads..." << std::endl;
 
 	//mkl_set_num_threads(4);
 
     mat predictions(training_size,1,fill::zeros);
     
-    mat x_train(training_size,input_layer_size);
-    x_train.load("c:\\train_x_4000.csv");
+    mat x_train(training_size,input_layer_size,fill::randu);
+//    x_train.load("c:\\train_x_4000.csv");
     
-    mat y_train(1,training_size);
-    y_train.load("c:\\train_y_4000.csv");
+    mat y_train(1,training_size,fill::randu);
+//    y_train.load("c:\\train_y_4000.csv");
     
     //calculate mean of the training data
     double x_mean = sum(sum(x_train));
@@ -104,56 +105,24 @@ void predict(const mat& Theta1,const mat& Theta2,const mat& inputdata, mat& pred
 }
 
 void sigmoid(const mat& input, mat& output){
-    output = input;
+    output = exp(-input);
     output.transform([](double val){return (1.0/(1.0 + val));});
+}
+
+void sigmoidGradient(const mat& input, mat& output){
+    output = exp(-input);
+    output.transform([](double val){return (1.0/(1.0 + val));});
+    output.transform([](double val){return (val * (1.0 - val));});
 }
 
 inline void keep_window_open()
 {
 	std::cin.clear();
-	cout << "Please enter a character to exit\n";
+	cout << "Please enter a character to exit: ";
 	char ch;
 	std::cin >> ch;
 	return;
 }
-
-
-//    subroutine predict(Theta1, Theta2, inputdata, predictions)
-//         real, allocatable, intent(in) :: Theta1(:,:), Theta2(:,:), inputdata(:,:)
-//         real, allocatable, intent(inout) :: predictions(:,:)
-//         real, allocatable :: h1(:,:), h1_ones(:,:), h2(:,:), pre_h1(:,:), pre_h2(:,:), ones(:,:), X(:,:)
-
-//         integer :: m
-//         integer :: a1,a2,b1,b2
-    
-//         m = size(inputdata,1)
-    
-//         allocate(h1(size(inputdata,1),size(Theta1,1)))
-//         allocate(h1_ones(size(inputdata,1),size(Theta1,1)+1))
-//         allocate(h2(size(inputdata,1),size(Theta2,1)))
-//         allocate(pre_h1(size(inputdata,1),size(Theta1,1)))
-//         allocate(pre_h2(size(inputdata,1),size(Theta2,1)))
-//         allocate(ones(m,1))
-//         allocate(X(size(inputdata,1),(size(inputdata,2)+1)))      
-    
-//         ones = 1.0
-
-//         X(:,1:1) = ones
-//         X(:,2:) = inputdata    
-    
-//         call matrix_multiply(X,0,Theta1,1,pre_h1)
-//         call sigmoid(pre_h1,h1)
-    
-//         h1_ones(:,1:1) = ones
-//         h1_ones(:,2:) = h1
-       
-//         call matrix_multiply(h1_ones,0,Theta2,1,pre_h2)
-//         call sigmoid(pre_h2,h2)
-    
-//         predictions = reshape(maxloc(h2,2), (/ m,1 /))
-    
-//    end subroutine predict
-
 
 
 //    subroutine representative_matrix(input_matrix, output_matrix)
@@ -175,24 +144,6 @@ inline void keep_window_open()
 //    end subroutine representative_matrix
 
 
-    // !subroutine sigmoid(input, output)
-    // !    real, allocatable :: input(:,:), output(:,:)
-    // !
-    // !    output = 1.0 / (1.0 + exp(-input))
-    // !end subroutine sigmoid
-
-
-
-    // subroutine sigmoidgradient(input, output)
-    //     real, allocatable :: input(:,:), output(:,:)
-
-    //     output = 1.0 / (1.0 + exp(-input))
-    //     output = output * (1.0 - output)   
-    // end subroutine sigmoidgradient  
-    
-    
-    
-    
 //         real function costandgradient(gradient, nn_params,input_layer_size,hidden_layer_size,num_labels, inputdata, y, lambda)
 
 //         real, allocatable :: inputdata(:,:), X(:,:), y(:,:), y_representative(:,:), gradient(:,:), ones(:,:)

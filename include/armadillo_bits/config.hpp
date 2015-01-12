@@ -29,7 +29,7 @@
 //// ARPACK is required for eigendecompositions of sparse matrices, eg. eigs_sym() 
 #endif
 
-// #define ARMA_USE_WRAPPER
+ #define ARMA_USE_WRAPPER
 //// Comment out the above line if you're getting linking errors when compiling your programs,
 //// or if you prefer to directly link with LAPACK, BLAS or ARPACK instead of the Armadillo runtime library.
 //// You will then need to link your programs directly with -llapack -lblas instead of -larmadillo
