@@ -1,6 +1,7 @@
 #include <iostream>
 #include <armadillo.h>
-//#include <mkl.h>
+#include <digitRecognition.h>
+#include <mkl.h>
 
 using namespace arma;
 
@@ -10,12 +11,11 @@ constexpr int hidden_layer_size = 500;  //n
 constexpr int num_labels = 10;
 
 constexpr double lambda = 0.1;
-constexpr int max_iterations = 100;
+//constexpr int max_iterations = 100;
 
 void predict(const mat&,const mat&,const mat&, mat&);
 void sigmoid(const mat&, mat&);
 void sigmoidGradient(const mat&, mat&);
-inline void keep_window_open();
 
 int main () {
 //	std::cout << "Starting program with " << mkl_get_max_threads() << " threads..." << std::endl;
@@ -54,9 +54,13 @@ int main () {
     mat combined_theta = join_rows(initial_theta1,initial_theta2);
     std::cout << "combined_theta rows: " << combined_theta.n_rows << ", cols: " << combined_theta.n_cols << endl;
     
-    
-    //call fmincg function
-    
+
+	//test section----------------------
+	mat gradient1 = combined_theta;
+	costfunction(gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
+    //----------------------------------
+
+
     
     initial_theta1 = combined_theta.submat(0, 0, 0, initial_theta1.n_cols-1);
 	initial_theta1.reshape(hidden_layer_size, input_layer_size + 1);
@@ -70,7 +74,10 @@ int main () {
     
     std::cout << "predictions: " << predictions.row(0) << endl;
 
-	keep_window_open();
+
+
+	std::cout << "Press ENTER to continue...";
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     
     return 0;
 }
@@ -115,14 +122,6 @@ void sigmoidGradient(const mat& input, mat& output){
     output.transform([](double val){return (val * (1.0 - val));});
 }
 
-inline void keep_window_open()
-{
-	std::cin.clear();
-	cout << "Please enter a character to exit: ";
-	char ch;
-	std::cin >> ch;
-	return;
-}
 
 
 //    subroutine representative_matrix(input_matrix, output_matrix)

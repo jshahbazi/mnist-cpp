@@ -14,6 +14,7 @@ set(SOURCE_FILES
     src/main.cpp
     include/armadillo.h
     include/armadillo_bits
+    include/digitRecognition.h
     )
 
 add_executable(mnist_cpp ${SOURCE_FILES})
