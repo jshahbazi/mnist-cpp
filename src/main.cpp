@@ -1,7 +1,7 @@
 #include <iostream>
 #include <armadillo.h>
 #include <digitRecognition.h>
-#include <mkl.h>
+//#include <mkl.h>
 
 using namespace arma;
 
@@ -13,9 +13,6 @@ constexpr int num_labels = 10;
 constexpr double lambda = 0.1;
 //constexpr int max_iterations = 100;
 
-void predict(const mat&,const mat&,const mat&, mat&);
-void sigmoid(const mat&, mat&);
-void sigmoidGradient(const mat&, mat&);
 
 int main () {
 //	std::cout << "Starting program with " << mkl_get_max_threads() << " threads..." << std::endl;
@@ -25,10 +22,10 @@ int main () {
     mat predictions(training_size,1,fill::zeros);
     
     mat x_train(training_size,input_layer_size,fill::randu);
-//    x_train.load("c:\\train_x_4000.csv");
+    x_train.load("train_x_4000.csv");
     
     mat y_train(1,training_size,fill::randu);
-//    y_train.load("c:\\train_y_4000.csv");
+    y_train.load("train_y_4000.csv");
     
     //calculate mean of the training data
     double x_mean = sum(sum(x_train));
@@ -44,9 +41,9 @@ int main () {
     
     
 	mat initial_theta1(hidden_layer_size, input_layer_size + 1, fill::ones);  //784 26   n k+1
-	initial_theta1.load("c:\\theta1.csv");
+	initial_theta1.load("theta1.csv");
 	mat initial_theta2(num_labels, hidden_layer_size + 1, fill::ones);        //25 11     numlabels n+1
-	initial_theta2.load("c:\\theta2.csv");
+	initial_theta2.load("theta2.csv");
 
 	initial_theta1.reshape(1, hidden_layer_size*(input_layer_size + 1));
 	initial_theta2.reshape(1, num_labels*(hidden_layer_size + 1));
@@ -82,65 +79,7 @@ int main () {
     return 0;
 }
 
-void predict(const mat& Theta1,const mat& Theta2,const mat& inputdata, mat& predictions){
-    mat x_holder(inputdata.n_rows,inputdata.n_cols+1,fill::ones);
-    mat pre_h1(x_holder.n_rows,Theta1.n_rows);
-    mat h1_ones(x_holder.n_rows,Theta1.n_rows+1,fill::ones);
-    mat h2(x_holder.n_rows,Theta2.n_rows,fill::zeros);
 
-	std::cout << "inputdata: " << inputdata.n_rows << " " << inputdata.n_cols << endl;
-	std::cout << "x_holder: " << x_holder.n_rows << " " << x_holder.n_cols << endl;
-    x_holder.submat(0,1,x_holder.n_rows-1,x_holder.n_cols-1) = inputdata;
-    
-    std::cout << "Theta1: " << Theta1.n_rows << " " << Theta1.n_cols << endl;
-    
-    pre_h1 = x_holder * Theta1.t();
-
-	std::cout << "pre_h1: " << pre_h1.n_rows << " " << pre_h1.n_cols << endl;
-
-    sigmoid(pre_h1,pre_h1);
-    h1_ones.submat(0,1,h1_ones.n_rows-1,h1_ones.n_cols-1) = pre_h1;
-    
-    std::cout << "h1_ones: " << h1_ones.n_rows << " " << h1_ones.n_cols << endl;
-    std::cout << "Theta2: " << Theta2.n_rows << " " << Theta2.n_cols << endl;
-    
-    h2 = h1_ones * Theta2.t();
-    sigmoid(h2,h2);
-    
-    predictions = arma::max(h2,0);
-
-}
-
-void sigmoid(const mat& input, mat& output){
-    output = exp(-input);
-    output.transform([](double val){return (1.0/(1.0 + val));});
-}
-
-void sigmoidGradient(const mat& input, mat& output){
-    output = exp(-input);
-    output.transform([](double val){return (1.0/(1.0 + val));});
-    output.transform([](double val){return (val * (1.0 - val));});
-}
-
-
-
-//    subroutine representative_matrix(input_matrix, output_matrix)
-//         real, allocatable, intent(in) :: input_matrix(:,:)
-//         real, allocatable, intent(inout) :: output_matrix(:,:)
-//         integer :: i,j
-    
-//         do i=1,size(input_matrix,1)
-//             temp = input_matrix(i,1)
-//             do j=1,K
-//                 if(temp == j)then
-//                     output_matrix(i,j) = 1
-//                 else
-//                     output_matrix(i,j) = 0
-//                 end if
-//             end do
-//         end do
-    
-//    end subroutine representative_matrix
 
 
 //         real function costandgradient(gradient, nn_params,input_layer_size,hidden_layer_size,num_labels, inputdata, y, lambda)
