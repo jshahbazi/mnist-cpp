@@ -15,7 +15,7 @@ using namespace arma;
 //real, allocatable, intent(inout) :: nn_params(:,:)  ----- combined_theta
 //real, allocatable, intent(in) :: inputdata(:,:), y(:,:)  ----- x_train, y_train
 
-void costfunction(mat& gradient1, mat& nn_params, int input_layer_size, int hidden_layer_size, int num_labels, const mat& inputdata, const mat& y, double lambda){
+void costfunction(double& cost, mat& gradient, mat& nn_params, int input_layer_size, int hidden_layer_size, int num_labels, const mat& inputdata, const mat& y, double lambda){
 	std::cout << "in costfunction..." << endl;
 
 
@@ -35,53 +35,74 @@ void costfunction(mat& gradient1, mat& nn_params, int input_layer_size, int hidd
 
 	int l = y.n_rows;
 	int m = inputdata.n_rows;
-	int k = input_layer_size;
+	//int k = input_layer_size;
 
-	mat y_representative(l, num_labels,fill::zeros);
-	
+
 	//create the  0 1 0 0 0 0 0 0 0 0 style representative matrix
+	mat y_representative(l, num_labels,fill::zeros);
 	for (unsigned int i=0;i<=(y.n_rows - 1);i++ ){
 		int row_value = y(i,0);
 		y_representative(i,row_value) = 1.0;
 	}
 	
+
+	//setup a_2
 	mat a_1(inputdata.n_rows,inputdata.n_cols + 1,fill::ones);
 	a_1.submat(0,1,a_1.n_rows-1,a_1.n_cols-1) = inputdata;
 	mat z_2(a_1.n_rows,Theta1.n_rows,fill::zeros);
-	
 	z_2 = a_1 * Theta1.t();
-
-	//mat a_2(z_2.n_rows,z_2.n_cols+1,fill::ones);
-	//sigmoid(z_2,a_2.submat(0,1,a_2.n_rows-1,a_2.n_cols-1));
+	mat a_2=z_2;
+	mat a_2_ones(z_2.n_rows,z_2.n_cols+1,fill::ones);
+	sigmoid(a_2,a_2);
+	a_2_ones.submat(0,1,a_2_ones.n_rows-1,a_2_ones.n_cols-1)=a_2;
 	
+	
+	//setup a_3
+	mat z_3(a_2_ones.n_rows,Theta2.n_rows,fill::zeros);
+	z_3 = a_2_ones * Theta2.t();
+	mat a_3 = z_3;
+	sigmoid(a_3,a_3);
+	
+	
+	//calculate cost
+	mat summation(z_3.n_rows,z_3.n_cols,fill::zeros);
+	summation = -y_representative % log(a_3)  -  (1 - y_representative) % log(1 - a_3);
+	double J = accu(summation);
+	J /= m;
+	std::cout << "J: " << J << endl;
+	
+	
+	//setup delta_3
+	mat delta_3 = y_representative;
+	delta_3 = a_3 - y_representative;
+	
+	
+	//setup sigmoid of z_2
+	mat z_2_ones(z_2.n_rows, z_2.n_cols + 1, fill::ones);
+	z_2_ones.submat(0,1,z_2_ones.n_rows-1,z_2_ones.n_cols-1) = z_2;
+	sigmoidGradient(z_2_ones,z_2_ones);
+	
+	
+	//setup delta_2
+	mat delta_2(delta_3.n_rows,Theta2.n_cols);
+	delta_2 = (delta_3 * Theta2) % z_2_ones;
+	
+	//setup and combine gradients
+	mat gradient_2(delta_3.n_cols,a_2_ones.n_cols,fill::zeros);
+	mat gradient_1(delta_2.n_cols-1,a_1.n_cols,fill::zeros);
+	gradient_2 = (delta_3.t() * a_2_ones) / m;
+	gradient_1 = (delta_2.cols(1,delta_2.n_cols-1).t() * a_1) / m;
+	gradient_2.cols(1,gradient_2.n_cols-1) += Theta2.cols(1,Theta2.n_cols-1) * (lambda/m);
+	gradient_1.cols(1,gradient_1.n_cols-1) += Theta1.cols(1,Theta1.n_cols-1) * (lambda/m);
+	gradient_1.reshape(1,gradient_1.n_rows*gradient_1.n_cols);
+	gradient_2.reshape(1,gradient_2.n_rows*gradient_2.n_cols);
+	gradient = join_rows(gradient_1,gradient_2);
 	
 
 
 	std::cout << "leaving costfunction..." << endl;
 }
 
-
-
-//         X(:,1:1) = ones
-//         X(:,2:) = inputdata        
-//         a_1 = X
-
-//         z_2 = 0.0
-        
-//         call matrix_multiply(a_1,0,Theta1,1,z_2)
-
-
-//         a_2 = 0.0
-//         call sigmoid(z_2,a_2)
-
-        
-//         a_2_ones(:,1:1) = ones
-//         a_2_ones(:,2:) = a_2
-        
-//         z_3 = 0.0
-//         call matrix_multiply(a_2_ones,0,Theta2,1,z_3)
-        
-//         call sigmoid(z_3,a_3)
 
 //         summation = 0.0
 //         summation = -y_representative * log(a_3) - (1 - y_representative) * log(1 - a_3)

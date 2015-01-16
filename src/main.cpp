@@ -54,7 +54,8 @@ int main () {
 
 	//test section----------------------
 	mat gradient1 = combined_theta;
-	costfunction(gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
+	double cost=0.0;
+	costfunction(cost, gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
     //----------------------------------
 
 
