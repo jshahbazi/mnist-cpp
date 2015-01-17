@@ -5,13 +5,13 @@
 
 using namespace arma;
 
-constexpr int training_size = 4000;    //m
+constexpr int training_size = 100;    //m
 constexpr int input_layer_size = 784;  //k
 constexpr int hidden_layer_size = 500;  //n
 constexpr int num_labels = 10;
 
 constexpr double lambda = 0.1;
-//constexpr int max_iterations = 100;
+constexpr int max_iterations = 100;
 
 
 int main () {
@@ -22,10 +22,10 @@ int main () {
     mat predictions(training_size,1,fill::zeros);
     
     mat x_train(training_size,input_layer_size,fill::randu);
-    x_train.load("train_x_4000.csv");
+    x_train.load("train_x_100.csv");
     
     mat y_train(1,training_size,fill::randu);
-    y_train.load("train_y_4000.csv");
+    y_train.load("train_y_100.csv");
     
     //calculate mean of the training data
     double x_mean = sum(sum(x_train));
@@ -45,36 +45,37 @@ int main () {
 	mat initial_theta2(num_labels, hidden_layer_size + 1, fill::ones);        //25 11     numlabels n+1
 	initial_theta2.load("theta2.csv");
 
-	initial_theta1.reshape(1, hidden_layer_size*(input_layer_size + 1));
-	initial_theta2.reshape(1, num_labels*(hidden_layer_size + 1));
+	initial_theta1.reshape(hidden_layer_size*(input_layer_size + 1),1);
+	initial_theta2.reshape(num_labels*(hidden_layer_size + 1),1);
     
-    mat combined_theta = join_rows(initial_theta1,initial_theta2);
-    std::cout << "combined_theta rows: " << combined_theta.n_rows << ", cols: " << combined_theta.n_cols << endl;
+    mat combined_theta = join_cols(initial_theta1,initial_theta2);
+    //std::cout << "combined_theta rows: " << combined_theta.n_rows << ", cols: " << combined_theta.n_cols << endl;
     
 
 	//test section----------------------
-	mat gradient1 = combined_theta;
-	double cost=0.0;
-	costfunction(cost, gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
+	//mat gradient1 = combined_theta;
+	//double cost=0.0;
+	//costfunction(cost, gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
+	fmincg(max_iterations,combined_theta,input_layer_size,hidden_layer_size,num_labels,x_train,y_train,lambda);
     //----------------------------------
 
 
     
-    initial_theta1 = combined_theta.submat(0, 0, 0, initial_theta1.n_cols-1);
+    initial_theta1 = combined_theta.submat(0, 0, initial_theta1.n_cols-1, 0);
 	initial_theta1.reshape(hidden_layer_size, input_layer_size + 1);
-    std::cout << "initial_theta1 rows: " << initial_theta1.n_rows << ", cols: " << initial_theta1.n_cols << endl;
+    //std::cout << "initial_theta1 rows: " << initial_theta1.n_rows << ", cols: " << initial_theta1.n_cols << endl;
     
-    initial_theta2 = combined_theta.submat(0, initial_theta1.n_cols-1, 0,initial_theta1.n_cols-1+initial_theta2.n_cols-1);
+    initial_theta2 = combined_theta.submat(initial_theta1.n_cols-1, 0,initial_theta1.n_cols-1+initial_theta2.n_cols-1, 0);
 	initial_theta2.reshape(num_labels, hidden_layer_size + 1);
-    std::cout << "initial_theta2 rows: " << initial_theta2.n_rows << ", cols: " << initial_theta2.n_cols << endl;
+    //std::cout << "initial_theta2 rows: " << initial_theta2.n_rows << ", cols: " << initial_theta2.n_cols << endl;
     
     predict(initial_theta1,initial_theta2,x_train,predictions);
     
-    std::cout << "predictions: " << predictions.row(0) << endl;
+    //std::cout << "predictions: " << predictions.row(0) << endl;
 
 
 
-	std::cout << "Press ENTER to continue...";
+	std::cout << std::endl << "Press ENTER to continue...";
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     
     return 0;
