@@ -1,17 +1,17 @@
 #include <iostream>
 #include <armadillo.h>
 #include <digitRecognition.h>
-//#include <mkl.h>
+#include <mkl.h>
 
 using namespace arma;
 
-constexpr int training_size = 100;    //m
+constexpr int training_size = 4000;    //m
 constexpr int input_layer_size = 784;  //k
 constexpr int hidden_layer_size = 500;  //n
 constexpr int num_labels = 10;
 
 constexpr double lambda = 0.1;
-constexpr int max_iterations = 100;
+constexpr int max_iterations = 1000;
 
 
 int main () {
@@ -21,29 +21,33 @@ int main () {
 
     mat predictions(training_size,1,fill::zeros);
     
-    mat x_train(training_size,input_layer_size,fill::randu);
-    x_train.load("train_x_100.csv");
+    mat x_train(training_size,input_layer_size,fill::zeros);
+    x_train.load("c:\\train_x_4000.csv");
     
-    mat y_train(1,training_size,fill::randu);
-    y_train.load("train_y_100.csv");
+    mat y_train(training_size,1,fill::randu);
+    y_train.load("c:\\train_y_4000.csv");
     
-    //calculate mean of the training data
-    double x_mean = sum(sum(x_train));
-    x_mean /= x_train.n_elem;  //33.5026  TODO: check this
-    
-    //calculate standard devication of the training data
-    mat x_train_mean(training_size,input_layer_size);
-    x_train_mean = x_train;
-    x_train_mean.transform( [x_mean](double val){return (val - x_mean);} );
-    double x_std = sum(sum(x_train_mean));
-    x_std /= (x_train_mean.n_elem);
-    x_std = std::sqrt(x_std);  //7.23942e-06  TODO: check this
-    
+    ////calculate mean of the training data
+    //double x_mean = sum(sum(x_train));
+    //x_mean /= x_train.n_elem;  //33.5026  TODO: check this
+    //
+    ////calculate standard devication of the training data
+    //mat x_train_mean(training_size,input_layer_size);
+    //x_train_mean = x_train;
+    //x_train_mean.transform( [x_mean](double val){return (val - x_mean);} );
+    //double x_std = sum(sum(x_train_mean));
+    //x_std /= (x_train_mean.n_elem);
+    //x_std = std::sqrt(x_std);  //7.23942e-06  TODO: check this
+
+	x_train = x_train / 255.0;
+	//x_train.transform([](double val){return (val/255.0); });
+	//std::cout << x_train.row(0) << endl;
+
     
 	mat initial_theta1(hidden_layer_size, input_layer_size + 1, fill::ones);  //784 26   n k+1
-	initial_theta1.load("theta1.csv");
+	initial_theta1.load("c:\\theta1.csv");
 	mat initial_theta2(num_labels, hidden_layer_size + 1, fill::ones);        //25 11     numlabels n+1
-	initial_theta2.load("theta2.csv");
+	initial_theta2.load("c:\\theta2.csv");
 
 	initial_theta1.reshape(hidden_layer_size*(input_layer_size + 1),1);
 	initial_theta2.reshape(num_labels*(hidden_layer_size + 1),1);
@@ -51,15 +55,19 @@ int main () {
     mat combined_theta = join_cols(initial_theta1,initial_theta2);
     //std::cout << "combined_theta rows: " << combined_theta.n_rows << ", cols: " << combined_theta.n_cols << endl;
     
-
+	wall_clock timer;
+	timer.tic();
 	//test section----------------------
 	//mat gradient1 = combined_theta;
-	//double cost=0.0;
+	double cost=0.0;
 	//costfunction(cost, gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
-	fmincg(max_iterations,combined_theta,input_layer_size,hidden_layer_size,num_labels,x_train,y_train,lambda);
+	fmincg(cost, max_iterations,combined_theta,input_layer_size,hidden_layer_size,num_labels,x_train,y_train,lambda);
     //----------------------------------
+	double n = timer.toc();
+	std::cout << "fmincg completed in: " << n << endl;
 
 
+	std::cout << "Final cost: " << cost << endl;
     
     initial_theta1 = combined_theta.submat(0, 0, initial_theta1.n_cols-1, 0);
 	initial_theta1.reshape(hidden_layer_size, input_layer_size + 1);
@@ -75,8 +83,7 @@ int main () {
 
 
 
-	std::cout << std::endl << "Press ENTER to continue...";
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	pause();
     
     return 0;
 }
