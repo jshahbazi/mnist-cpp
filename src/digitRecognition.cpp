@@ -1,7 +1,7 @@
 #include <iostream>
 #include <armadillo.h>
 #include <digitRecognition.h>
-#include <mkl.h>
+//#include <mkl.h>
 #include <iomanip>
 
 using namespace arma;
@@ -496,7 +496,7 @@ void sigmoidGradient(const mat& input, mat& output){
     output.transform([](double val){return (val * (1.0 - val));});
 }
 
-void pause(){
-	std::cout << std::endl << "Press ENTER to continue...";
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-}
+// void pauseJNS(){
+// 	std::cout << std::endl << "Press ENTER to continue...";
+// 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+// }

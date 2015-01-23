@@ -1,7 +1,7 @@
 #include <iostream>
 #include <armadillo.h>
 #include <digitRecognition.h>
-#include <mkl.h>
+//#include <mkl.h>
 
 using namespace arma;
 
@@ -22,10 +22,12 @@ int main () {
     mat predictions(training_size,1,fill::zeros);
     
     mat x_train(training_size,input_layer_size,fill::zeros);
-    x_train.load("c:\\train_x_4000.csv");
+    //x_train.load("c:\\train_x_4000.csv");
+    x_train.load("./mnist_data/train_x_4000.csv");
     
     mat y_train(training_size,1,fill::randu);
-    y_train.load("c:\\train_y_4000.csv");
+    //y_train.load("c:\\train_y_4000.csv");
+    y_train.load("./mnist_data/train_y_4000.csv");
     
     ////calculate mean of the training data
     //double x_mean = sum(sum(x_train));
@@ -45,9 +47,11 @@ int main () {
 
     
 	mat initial_theta1(hidden_layer_size, input_layer_size + 1, fill::ones);  //784 26   n k+1
-	initial_theta1.load("c:\\theta1.csv");
+	//initial_theta1.load("c:\\theta1.csv");
+	initial_theta1.load("./mnist_data/theta1.csv");
 	mat initial_theta2(num_labels, hidden_layer_size + 1, fill::ones);        //25 11     numlabels n+1
-	initial_theta2.load("c:\\theta2.csv");
+	//initial_theta2.load("c:\\theta2.csv");
+	initial_theta2.load("./mnist_data/theta2.csv");
 
 	initial_theta1.reshape(hidden_layer_size*(input_layer_size + 1),1);
 	initial_theta2.reshape(num_labels*(hidden_layer_size + 1),1);
@@ -55,17 +59,20 @@ int main () {
     mat combined_theta = join_cols(initial_theta1,initial_theta2);
     //std::cout << "combined_theta rows: " << combined_theta.n_rows << ", cols: " << combined_theta.n_cols << endl;
     
+	//test section----------------------
+	mat gradient1 = combined_theta;
+	double cost=0.0;
+	
 	wall_clock timer;
 	timer.tic();
-	//test section----------------------
-	//mat gradient1 = combined_theta;
-	double cost=0.0;
-	//costfunction(cost, gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
-	fmincg(cost, max_iterations,combined_theta,input_layer_size,hidden_layer_size,num_labels,x_train,y_train,lambda);
+	    costfunction(cost, gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
+	    //fmincg(cost, max_iterations,combined_theta,input_layer_size,hidden_layer_size,num_labels,x_train,y_train,lambda);
+    double n = timer.toc();
+	
+	
+	std::cout << "costfunction completed in: " << n << " seconds." << endl;
     //----------------------------------
-	double n = timer.toc();
-	std::cout << "fmincg completed in: " << n << endl;
-
+	
 
 	std::cout << "Final cost: " << cost << endl;
     
@@ -73,7 +80,7 @@ int main () {
 	initial_theta1.reshape(hidden_layer_size, input_layer_size + 1);
     //std::cout << "initial_theta1 rows: " << initial_theta1.n_rows << ", cols: " << initial_theta1.n_cols << endl;
     
-    initial_theta2 = combined_theta.submat(initial_theta1.n_cols-1, 0,initial_theta1.n_cols-1+initial_theta2.n_cols-1, 0);
+    initial_theta2 = combined_theta.submat(initial_theta1.n_cols, 0,initial_theta1.n_cols+initial_theta2.n_cols-1, 0);
 	initial_theta2.reshape(num_labels, hidden_layer_size + 1);
     //std::cout << "initial_theta2 rows: " << initial_theta2.n_rows << ", cols: " << initial_theta2.n_cols << endl;
     
@@ -83,7 +90,7 @@ int main () {
 
 
 
-	pause();
+	//pauseJNS();
     
     return 0;
 }

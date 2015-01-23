@@ -7,4 +7,4 @@ void costfunction(double&, mat&, mat&,const int,const int,const int, const mat&,
 void predict(const mat&,const mat&,const mat&, mat&);
 void sigmoid(const mat&, mat&);
 void sigmoidGradient(const mat&, mat&);
-void pause();
+//void pauseJNS();
