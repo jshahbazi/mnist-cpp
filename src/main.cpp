@@ -65,8 +65,8 @@ int main () {
 	
 	wall_clock timer;
 	timer.tic();
-	    costfunction(cost, gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
-	    //fmincg(cost, max_iterations,combined_theta,input_layer_size,hidden_layer_size,num_labels,x_train,y_train,lambda);
+	    //costfunction(cost, gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
+	    fmincg(cost, max_iterations,combined_theta,input_layer_size,hidden_layer_size,num_labels,x_train,y_train,lambda);
     double n = timer.toc();
 	
 	
