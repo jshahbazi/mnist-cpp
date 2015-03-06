@@ -29,6 +29,20 @@ int main () {
     //y_train.load("c:\\train_y_4000.csv");
     y_train.load("./mnist_data/train_y_4000.csv");
     
+    
+    mat s(10000,10000,fill::randu);
+    mat t(10000,10000,fill::randu);
+    mat u(10000,10000,fill::zeros);
+    
+    
+	wall_clock timer;
+	timer.tic();    
+    u = s * t;
+    double n = timer.toc();
+	std::cout << "10k x 10k matrix multiplication completed in: " << n << " seconds." << endl;
+    pause();
+    
+    
     ////calculate mean of the training data
     //double x_mean = sum(sum(x_train));
     //x_mean /= x_train.n_elem;  //33.5026  TODO: check this
@@ -63,14 +77,10 @@ int main () {
 	mat gradient1 = combined_theta;
 	double cost=0.0;
 	
-	wall_clock timer;
-	timer.tic();
+
 	    //costfunction(cost, gradient1, combined_theta, input_layer_size, hidden_layer_size, num_labels, x_train, y_train, lambda);
 	    fmincg(cost, max_iterations,combined_theta,input_layer_size,hidden_layer_size,num_labels,x_train,y_train,lambda);
-    double n = timer.toc();
-	
-	
-	std::cout << "costfunction completed in: " << n << " seconds." << endl;
+
     //----------------------------------
 	
 
